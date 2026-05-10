@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guitar Pro Index</title>
+<script>
+/* apply theme before first paint to avoid flash */
+(function(){
+  var t=localStorage.getItem('gpi_theme')||'system';
+  var d=t==='system'?(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t;
+  document.documentElement.setAttribute('data-theme',d);
+})();
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -26,6 +34,41 @@
   --info:      #58a6ff;
   --r:         6px;
 }
+
+/* ── Light theme ─────────────────────────────── */
+[data-theme=light]{
+  --bg:       #ffffff;
+  --surface:  #f6f8fa;
+  --surface2: #eaeef2;
+  --hover:    #f3f4f6;
+  --border:   #d0d7de;
+  --border2:  #eaeef2;
+  --accent:   #c75100;
+  --accent-h: #d1580a;
+  --accent-d: rgba(199,81,0,.10);
+  --text:     #24292f;
+  --muted:    #57606a;
+  --bright:   #1f2328;
+  --star:     #9a6700;
+  --ok:       #1a7f37;
+  --err:      #cf222e;
+  --info:     #0969da;
+}
+[data-theme=light] select.input{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2357606a' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+}
+[data-theme=light] mark.hl{background:rgba(199,81,0,.18)}
+[data-theme=light] .badge-t{background:#ddf4ff;border-color:#54aeff;color:#0550ae}
+[data-theme=light] .badge-s{background:#ddf4ff;border-color:#54aeff;color:#0550ae}
+[data-theme=light] .fmt-gp5{background:#e6ffec;color:#116329}
+[data-theme=light] .fmt-gp7{background:#ddf4ff;color:#0550ae}
+[data-theme=light] .fmt-gpx,[data-theme=light] .fmt-gp6{background:#fbefff;color:#6639ba}
+[data-theme=light] .fmt-gp4{background:#fff8c5;color:#7d4e00}
+[data-theme=light] .fmt-gp3{background:#ffe0e0;color:#a40000}
+[data-theme=light] .fmt-gp {background:#f6f8fa;color:#57606a}
+[data-theme=light] .grp-color-dot{border-color:rgba(0,0,0,.12)}
+[data-theme=light] ::-webkit-scrollbar-thumb{background:#c8c8c8}
+[data-theme=light] ::-webkit-scrollbar-thumb:hover{background:#a0a0a0}
 
 body{
   background:var(--bg);
@@ -378,6 +421,7 @@ textarea.input{resize:vertical;min-height:56px}
   <span id="hdr-stats" class="hdr-stats"></span>
   <div class="hdr-right">
     <div id="spin" class="spin-row"><div class="spinner"></div>Scanning…</div>
+    <button class="btn" id="theme-btn" onclick="toggleThemePicker(this)">◑ System</button>
     <button class="btn" onclick="doScan()">↻ Rescan</button>
     <button class="btn" onclick="openSettings()">⚙ Settings</button>
     <a href="https://github.com/shaycohen/gp_index" target="_blank" rel="noopener"
@@ -547,6 +591,81 @@ textarea.input{resize:vertical;min-height:56px}
 <div id="toasts"></div>
 
 <script>
+// ─────────────────────────────────────────────────────────────────
+//  THEME
+// ─────────────────────────────────────────────────────────────────
+
+const THEME_KEY  = 'gpi_theme';
+const systemDarkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+let currentTheme = localStorage.getItem(THEME_KEY) || 'system';
+let themePicker  = null;
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  localStorage.setItem(THEME_KEY, theme);
+  const effective = theme === 'system'
+    ? (systemDarkMQ.matches ? 'dark' : 'light')
+    : theme;
+  document.documentElement.setAttribute('data-theme', effective);
+  updateThemeBtn();
+}
+
+function updateThemeBtn() {
+  const btn = document.getElementById('theme-btn');
+  if (!btn) return;
+  const labels = { light: '☀ Light', dark: '☾ Dark', system: '◑ System' };
+  btn.textContent = labels[currentTheme] || '◑ System';
+}
+
+function toggleThemePicker(btn) {
+  if (themePicker) { themePicker.remove(); themePicker = null; return; }
+
+  const picker = document.createElement('div');
+  picker.className = 'grp-picker';
+  const rect = btn.getBoundingClientRect();
+  picker.style.top   = (rect.bottom + 4) + 'px';
+  picker.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
+  picker.style.left  = 'auto';
+
+  for (const [val, icon, label] of [['light','☀','Light'],['dark','☾','Dark'],['system','◑','System']]) {
+    const item = document.createElement('div');
+    item.className = 'grp-picker-item';
+    item.style.gap = '8px';
+
+    const ic = document.createElement('span');
+    ic.style.cssText = 'width:16px;text-align:center;flex-shrink:0';
+    ic.textContent = icon;
+    item.appendChild(ic);
+    item.appendChild(document.createTextNode(label));
+
+    if (currentTheme === val) {
+      const chk = document.createElement('span');
+      chk.style.cssText = 'margin-left:auto;color:var(--accent)';
+      chk.textContent = '✓';
+      item.appendChild(chk);
+    }
+
+    item.onclick = () => { applyTheme(val); picker.remove(); themePicker = null; };
+    picker.appendChild(item);
+  }
+
+  document.body.appendChild(picker);
+  themePicker = picker;
+
+  setTimeout(() => {
+    document.addEventListener('click', function close(ev) {
+      if (!picker.contains(ev.target)) {
+        picker.remove(); themePicker = null;
+        document.removeEventListener('click', close);
+      }
+    });
+  }, 0);
+}
+
+systemDarkMQ.addEventListener('change', () => {
+  if (currentTheme === 'system') applyTheme('system');
+});
+
 // ─────────────────────────────────────────────────────────────────
 //  CONSTANTS
 // ─────────────────────────────────────────────────────────────────
@@ -1389,6 +1508,7 @@ async function maybeMigrate(serverData) {
 }
 
 async function init() {
+  applyTheme(currentTheme);
   loadLS();
   renderAll();
   try {
