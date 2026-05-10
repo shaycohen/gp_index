@@ -109,7 +109,28 @@ select.input{
   background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;
 }
 .chk-label{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--text)}
-.chk-label input{accent-color:var(--accent);width:14px;height:14px}
+
+/* unified custom checkbox — works for both .chk-label and .c-sel */
+input[type=checkbox]{
+  appearance:none;-webkit-appearance:none;
+  width:14px;height:14px;flex-shrink:0;cursor:pointer;
+  border:1.5px solid var(--border);border-radius:3px;
+  background:var(--surface2);
+  transition:background .12s,border-color .12s;
+}
+input[type=checkbox]:checked{
+  background:var(--accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='1.8' d='M1 4l3 3 5-6'/%3E%3C/svg%3E")
+    center/9px no-repeat;
+  border-color:var(--accent);
+}
+input[type=checkbox]:indeterminate{
+  background:var(--accent-d)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 2'%3E%3Cpath fill='none' stroke='%23f0883e' stroke-width='2' d='M1 1h8'/%3E%3C/svg%3E")
+    center/8px no-repeat;
+  border-color:var(--accent);
+}
+input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .filter-grp{display:flex;flex-direction:column;gap:5px}
 
@@ -129,6 +150,23 @@ select.input{
 }
 .grp-item:hover .grp-del{opacity:1}
 .grp-del:hover{color:var(--err)}
+.grp-rename{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:13px;line-height:1;padding:0 1px;opacity:0;transition:opacity .12s;
+}
+.grp-item:hover .grp-rename{opacity:1}
+.grp-rename:hover{color:var(--info)}
+.grp-color-dot{
+  width:9px;height:9px;border-radius:50%;flex-shrink:0;
+  background:var(--border);border:1px solid rgba(255,255,255,.12);
+  display:inline-block;
+}
+.color-swatch{
+  width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;
+  transition:border-color .12s,transform .1s;flex-shrink:0;
+}
+.color-swatch:hover{transform:scale(1.2)}
+.color-swatch.sel{border-color:#fff}
 
 /* ── Main ─────────────────────────────────── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
@@ -166,6 +204,28 @@ tr:hover td{background:var(--hover)}
 .c-fmt   {width:65px;text-align:center}
 .c-act   {width:90px}
 .c-lo    {width:110px}
+.c-sel   {width:36px;text-align:center}
+
+/* ── Selection bar ───────────────────────────── */
+.sel-bar{
+  display:none;align-items:center;gap:8px;
+  padding:6px 14px;flex-shrink:0;
+  background:var(--accent-d);border-bottom:1px solid var(--accent);
+}
+.sel-bar.vis{display:flex}
+.sel-count{font-size:13px;color:var(--accent);font-weight:500}
+
+/* ── Group picker ────────────────────────────── */
+.grp-picker{
+  position:fixed;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:0 6px 20px rgba(0,0,0,.4);
+  z-index:50;min-width:160px;padding:4px 0;
+}
+.grp-picker-item{
+  padding:7px 14px;cursor:pointer;font-size:13px;color:var(--text);
+  transition:background .1s;display:flex;align-items:center;gap:7px;
+}
+.grp-picker-item:hover{background:var(--hover)}
 
 /* star */
 .star-btn{
@@ -183,7 +243,7 @@ tr:hover td{background:var(--hover)}
   font-weight:500;white-space:nowrap;
   background:var(--surface2);border:1px solid var(--border);color:var(--muted);
 }
-.badge-t{background:var(--accent-d);border-color:var(--accent);color:var(--accent)}
+.badge-t{background:#1c2952;border-color:#3d5a99;color:#79a8ff}
 .badge-s{background:#1c2952;border-color:#3d5a99;color:#79a8ff}
 
 .fmt{
@@ -225,9 +285,8 @@ tr:hover .row-acts{opacity:1}
 /* highlight */
 mark.hl{background:rgba(240,136,62,.32);border-radius:2px;color:inherit}
 
-/* open cursor on clickable cells */
-.c-open{cursor:pointer}
-.c-open:hover .song-name{color:var(--accent-h)}
+/* .c-open kept for layout but no longer triggers open-on-click */
+.c-open{}
 
 /* ── Empty state ─────────────────────────────── */
 .empty{
@@ -321,6 +380,21 @@ textarea.input{resize:vertical;min-height:56px}
     <div id="spin" class="spin-row"><div class="spinner"></div>Scanning…</div>
     <button class="btn" onclick="doScan()">↻ Rescan</button>
     <button class="btn" onclick="openSettings()">⚙ Settings</button>
+    <a href="https://github.com/shaycohen/gp_index" target="_blank" rel="noopener"
+       style="color:var(--muted);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:4px;margin-left:4px"
+       title="View on GitHub">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                 -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+                 .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+                 -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27
+                 .68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                 .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+                 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      shaycohen/gp_index
+    </a>
   </div>
 </header>
 
@@ -370,6 +444,11 @@ textarea.input{resize:vertical;min-height:56px}
       <span id="res-count" class="res-count"></span>
       <div style="flex:1"></div>
       <button class="btn btn-sm" onclick="clearFilters()">Clear filters</button>
+    </div>
+    <div id="sel-bar" class="sel-bar">
+      <span id="sel-count" class="sel-count"></span>
+      <button class="btn btn-sm btn-primary" onclick="showGroupPicker(this)">＋ Add to group</button>
+      <button class="btn btn-sm" onclick="clearSelection()">✕ Deselect all</button>
     </div>
     <div class="tbl-wrap" id="tbl-wrap"></div>
   </main>
@@ -434,6 +513,36 @@ textarea.input{resize:vertical;min-height:56px}
   </div>
 </div>
 
+<!-- ══ Group modal (create / rename) ════════════════════════════════════════ -->
+<div id="grp-ov" class="overlay" onclick="closeGrpModal(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="width:360px;max-width:92vw">
+    <div class="modal-h" id="grp-modal-h">New Group</div>
+    <div class="form-grp">
+      <label class="form-lbl">Name</label>
+      <input type="text" id="grp-name-in" class="input" placeholder="Group name"
+             onkeydown="if(event.key==='Enter')saveGrpModal()">
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Color</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">
+        <div id="grp-swatches" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        <input type="color" id="grp-color-in" value="#f0883e"
+               title="Custom color"
+               style="width:28px;height:28px;padding:2px;border-radius:var(--r);
+                      border:1px solid var(--border);background:var(--surface2);
+                      cursor:pointer;flex-shrink:0"
+               oninput="onColorInput(this.value)">
+        <button class="btn btn-sm" onclick="clearGrpColor()" title="No color" id="grp-no-color"
+                style="padding:3px 8px;font-size:11px">None</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeGrpModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGrpModal()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Toasts ════════════════════════════════════════════════════════════════ -->
 <div id="toasts"></div>
 
@@ -472,6 +581,11 @@ const TUNINGS = [
 const SERVER = 'http://localhost:3847';
 const LS_KEY = 'gpi_v1';
 
+const PRESET_COLORS = [
+  '#f0883e','#58a6ff','#3fb950','#bc8cff',
+  '#f85149','#e3b341','#39d0d8','#f778ba',
+];
+
 // ─────────────────────────────────────────────────────────────────
 //  STATE  (files/filters/sort stay in localStorage; meta/dirs/groups live on server)
 // ─────────────────────────────────────────────────────────────────
@@ -481,8 +595,14 @@ let META   = {};   // path → row from server DB
 let DIRS   = [];
 let GROUPS = [];
 
-let editPath = null;
-let curFiles = [];
+let editPath      = null;
+let curFiles      = [];
+let selected      = new Set();
+let shiftAnchor   = null;
+let pickerEl      = null;
+let grpModalMode   = 'create'; // 'create' | 'rename'
+let grpModalTarget = null;     // old group name when renaming
+let grpModalColor  = '';       // '' means no color
 
 function defaultState() {
   return {
@@ -679,11 +799,40 @@ function renderSidebar() {
     () => { S.filters.fav = !S.filters.fav; S.filters.group = ''; saveLS(); renderAll(); }));
 
   for (const g of GROUPS) {
-    const cnt = S.files.filter(f => (getMeta(f.path).groups || []).includes(g)).length;
-    gl.appendChild(mkItem('📁 ' + g, S.filters.group === g,
-      () => { S.filters.group = g; S.filters.fav = false; saveLS(); renderAll(); },
-      () => deleteGroup(g),
-      cnt));
+    const cnt = S.files.filter(f => (getMeta(f.path).groups || []).includes(g.name)).length;
+    const d = document.createElement('div');
+    d.className = 'grp-item' + (S.filters.group === g.name ? ' on' : '');
+    d.onclick = () => { S.filters.group = g.name; S.filters.fav = false; saveLS(); renderAll(); };
+
+    const dot = document.createElement('span');
+    dot.className = 'grp-color-dot';
+    if (g.color) dot.style.background = g.color;
+    d.appendChild(dot);
+
+    const lbl = document.createElement('span');
+    lbl.textContent = g.name;
+    d.appendChild(lbl);
+
+    const cntEl = document.createElement('span');
+    cntEl.className = 'grp-count';
+    cntEl.textContent = cnt;
+    d.appendChild(cntEl);
+
+    const renBtn = document.createElement('button');
+    renBtn.className = 'grp-rename';
+    renBtn.textContent = '✎';
+    renBtn.title = 'Rename / edit color';
+    renBtn.onclick = e => { e.stopPropagation(); openGrpModal('rename', g.name); };
+    d.appendChild(renBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'grp-del';
+    delBtn.textContent = '×';
+    delBtn.title = 'Delete group';
+    delBtn.onclick = e => { e.stopPropagation(); deleteGroup(g.name); };
+    d.appendChild(delBtn);
+
+    gl.appendChild(d);
   }
 }
 
@@ -747,6 +896,7 @@ function renderTable() {
   }
 
   const thead = `<thead><tr>
+    <th class="c-sel"><input type="checkbox" onchange="toggleSelectAll(this.checked)" title="Select all"></th>
     <th class="c-fav" title="Favorite">⭐</th>
     <th class="sortable${sh('artist')}"      onclick="setSort('artist')">Artist ${si('artist')}</th>
     <th class="sortable${sh('song')}"        onclick="setSort('song')">Song ${si('song')}</th>
@@ -761,9 +911,15 @@ function renderTable() {
   const rows = vis.map((f, i) => {
     const m      = effective(f);
     const tLabel = TUNINGS.find(t => t.id === m.tuning)?.label || m.tuning || '—';
-    const chips  = (m.groups||[]).slice(0,3).map(g => `<span class="chip">${esc(g)}</span>`).join('');
+    const chips  = (m.groups||[]).slice(0,3).map(gName => {
+      const grp = GROUPS.find(g => g.name === gName);
+      const c = grp?.color;
+      const s = c ? `background:${c}22;border-color:${c};color:${c}` : '';
+      return `<span class="chip" style="${s}">${esc(gName)}</span>`;
+    }).join('');
 
     return `<tr data-i="${i}">
+      <td class="c-sel"><input type="checkbox" ${selected.has(f.path)?'checked':''} onclick="onRowCheck(event,'${esc(f.path)}')"></td>
       <td class="c-fav">
         <button class="star-btn${m.favorite?' on':''}" data-action="fav" title="Toggle favorite">
           ${m.favorite ? '★' : '☆'}
@@ -791,6 +947,7 @@ function renderTable() {
   wrap.innerHTML = `<table>${thead}<tbody id="tbody">${rows}</tbody></table>`;
 
   document.getElementById('tbody').addEventListener('click', e => {
+    if (e.target.type === 'checkbox') return;
     const row = e.target.closest('tr[data-i]');
     if (!row) return;
     const f   = curFiles[parseInt(row.dataset.i)];
@@ -798,9 +955,10 @@ function renderTable() {
     const act = e.target.closest('[data-action]')?.dataset.action;
     if (act === 'fav')  { toggleFav(f.path); return; }
     if (act === 'edit') { openEdit(f.path);  return; }
-    if (e.target.tagName === 'TD' || e.target.closest('td:not(:last-child)')) openFile(f.path);
-    if (act === 'open') openFile(f.path);
+    if (act === 'open') { openFile(f.path);  return; }
   });
+
+  updateSelectionUI();
 }
 
 function renderDirs() {
@@ -826,6 +984,7 @@ function onFilter() {
   S.filters.tuning = document.getElementById('f-tuning').value;
   S.filters.str    = document.getElementById('f-str').value;
   S.filters.fav    = document.getElementById('f-fav').checked;
+  selected.clear(); shiftAnchor = null;
   saveLS(); renderStats(); renderSidebar(); renderTable();
 }
 
@@ -848,29 +1007,216 @@ function toggleFav(p) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+//  MULTI-SELECT
+// ─────────────────────────────────────────────────────────────────
+
+function onRowCheck(e, path) {
+  e.stopPropagation();
+  if (e.shiftKey && shiftAnchor !== null) {
+    const ai = curFiles.findIndex(f => f.path === shiftAnchor);
+    const bi = curFiles.findIndex(f => f.path === path);
+    const lo = Math.min(ai, bi), hi = Math.max(ai, bi);
+    const adding = !selected.has(path);
+    for (let i = lo; i <= hi; i++) {
+      if (adding) selected.add(curFiles[i].path);
+      else        selected.delete(curFiles[i].path);
+    }
+  } else {
+    if (selected.has(path)) selected.delete(path);
+    else                    selected.add(path);
+    shiftAnchor = path;
+  }
+  updateSelectionUI();
+}
+
+function toggleSelectAll(checked) {
+  if (checked) curFiles.forEach(f => selected.add(f.path));
+  else         selected.clear();
+  shiftAnchor = null;
+  updateSelectionUI();
+}
+
+function clearSelection() {
+  selected.clear();
+  shiftAnchor = null;
+  updateSelectionUI();
+}
+
+function updateSelectionUI() {
+  const bar = document.getElementById('sel-bar');
+  const cnt = document.getElementById('sel-count');
+  if (!bar) return;
+  bar.classList.toggle('vis', selected.size > 0);
+  if (cnt) cnt.textContent = `${selected.size} file${selected.size === 1 ? '' : 's'} selected`;
+
+  document.querySelectorAll('#tbody tr[data-i]').forEach(row => {
+    const f  = curFiles[parseInt(row.dataset.i)];
+    const cb = row.querySelector('input[type=checkbox]');
+    if (cb && f) cb.checked = selected.has(f.path);
+  });
+
+  const hcb = document.querySelector('thead input[type=checkbox]');
+  if (hcb) {
+    hcb.indeterminate = selected.size > 0 && selected.size < curFiles.length;
+    hcb.checked       = curFiles.length > 0 && selected.size === curFiles.length;
+  }
+}
+
+function showGroupPicker(btn) {
+  if (pickerEl) { pickerEl.remove(); pickerEl = null; return; }
+  if (!GROUPS.length) { toast('No groups yet — create one in the sidebar first.', 'inf'); return; }
+
+  const picker = document.createElement('div');
+  picker.className = 'grp-picker';
+  const rect = btn.getBoundingClientRect();
+  picker.style.top  = (rect.bottom + 4) + 'px';
+  picker.style.left = rect.left + 'px';
+
+  for (const g of GROUPS) {
+    const item = document.createElement('div');
+    item.className = 'grp-picker-item';
+
+    const dot = document.createElement('span');
+    dot.className = 'grp-color-dot';
+    if (g.color) dot.style.background = g.color;
+    item.appendChild(dot);
+    item.appendChild(document.createTextNode(g.name));
+
+    item.onclick = () => { addSelectedToGroup(g.name); picker.remove(); pickerEl = null; };
+    picker.appendChild(item);
+  }
+  document.body.appendChild(picker);
+  pickerEl = picker;
+
+  setTimeout(() => {
+    document.addEventListener('click', function close(ev) {
+      if (!picker.contains(ev.target)) {
+        picker.remove(); pickerEl = null;
+        document.removeEventListener('click', close);
+      }
+    });
+  }, 0);
+}
+
+async function addSelectedToGroup(groupName) {
+  if (!selected.size) return;
+  const paths = [...selected];
+  for (const p of paths) {
+    const existing = getMeta(p).groups || [];
+    if (!existing.includes(groupName)) {
+      const newGroups = [...existing, groupName];
+      META[p] = {...getMeta(p), groups: newGroups};
+      await api('POST', '/api/meta', {path: p, groups: newGroups}).catch(e => toast(e.message, 'err'));
+    }
+  }
+  toast(`Added ${paths.length} file${paths.length === 1 ? '' : 's'} to "${groupName}"`, 'ok');
+  clearSelection();
+  renderAll();
+}
+
+// ─────────────────────────────────────────────────────────────────
 //  GROUPS
 // ─────────────────────────────────────────────────────────────────
 
-async function addGroup() {
-  const name = prompt('Group name:');
-  if (!name?.trim()) return;
-  const g = name.trim();
-  if (!GROUPS.includes(g)) {
-    GROUPS.push(g);
-    await api('POST', '/api/groups', {groups: GROUPS}).catch(e => toast(e.message, 'err'));
+function addGroup() { openGrpModal('create'); }
+
+function openGrpModal(mode, targetName) {
+  grpModalMode   = mode;
+  grpModalTarget = targetName || null;
+
+  const existing = targetName ? GROUPS.find(g => g.name === targetName) : null;
+  grpModalColor  = existing?.color || PRESET_COLORS[0];
+
+  document.getElementById('grp-modal-h').textContent = mode === 'rename' ? 'Rename Group' : 'New Group';
+  document.getElementById('grp-name-in').value = targetName || '';
+  document.getElementById('grp-color-in').value = grpModalColor || PRESET_COLORS[0];
+
+  const sw = document.getElementById('grp-swatches');
+  sw.innerHTML = '';
+  for (const c of PRESET_COLORS) {
+    const s = document.createElement('span');
+    s.className = 'color-swatch' + (grpModalColor === c ? ' sel' : '');
+    s.style.background = c;
+    s.title = c;
+    s.onclick = () => { grpModalColor = c; syncSwatchSel(c); document.getElementById('grp-color-in').value = c; };
+    sw.appendChild(s);
   }
-  renderSidebar();
-  toast(`Group "${g}" created`, 'ok');
+
+  document.getElementById('grp-ov').classList.add('open');
+  document.getElementById('grp-name-in').focus();
+}
+
+function syncSwatchSel(color) {
+  document.querySelectorAll('#grp-swatches .color-swatch').forEach((s, i) => {
+    s.classList.toggle('sel', PRESET_COLORS[i] === color);
+  });
+}
+
+function onColorInput(val) {
+  grpModalColor = val;
+  syncSwatchSel(val);
+}
+
+function clearGrpColor() {
+  grpModalColor = '';
+  document.getElementById('grp-color-in').value = PRESET_COLORS[0];
+  syncSwatchSel('');
+}
+
+function closeGrpModal(e) {
+  if (e && e.target !== document.getElementById('grp-ov')) return;
+  document.getElementById('grp-ov').classList.remove('open');
+}
+
+async function saveGrpModal() {
+  const name = document.getElementById('grp-name-in').value.trim();
+  if (!name) { document.getElementById('grp-name-in').focus(); return; }
+
+  if (grpModalMode === 'create') {
+    if (!GROUPS.find(g => g.name === name)) {
+      GROUPS.push({ name, color: grpModalColor });
+      await api('POST', '/api/groups', { groups: GROUPS }).catch(e => toast(e.message, 'err'));
+      toast(`Group "${name}" created`, 'ok');
+    } else {
+      toast('A group with that name already exists', 'err'); return;
+    }
+  } else {
+    const oldName = grpModalTarget;
+    if (name !== oldName && GROUPS.find(g => g.name === name)) {
+      toast('A group with that name already exists', 'err'); return;
+    }
+    const idx = GROUPS.findIndex(g => g.name === oldName);
+    if (idx >= 0) {
+      GROUPS[idx] = { name, color: grpModalColor };
+      if (name !== oldName) {
+        for (const p in META) {
+          if (META[p].groups) {
+            const gi = META[p].groups.indexOf(oldName);
+            if (gi >= 0) {
+              META[p].groups[gi] = name;
+              api('POST', '/api/meta', { path: p, groups: META[p].groups }).catch(e => toast(e.message, 'err'));
+            }
+          }
+        }
+        if (S.filters.group === oldName) { S.filters.group = name; saveLS(); }
+      }
+      await api('POST', '/api/groups', { groups: GROUPS }).catch(e => toast(e.message, 'err'));
+      toast(`Group updated`, 'ok');
+    }
+  }
+
+  closeGrpModal();
+  renderAll();
 }
 
 async function deleteGroup(name) {
   if (!confirm(`Delete group "${name}"?`)) return;
-  GROUPS = GROUPS.filter(g => g !== name);
+  GROUPS = GROUPS.filter(g => g.name !== name);
   for (const p in META) {
     if (META[p].groups) META[p].groups = META[p].groups.filter(g => g !== name);
   }
   if (S.filters.group === name) S.filters.group = '';
-  await api('POST', '/api/groups', {groups: GROUPS}).catch(e => toast(e.message, 'err'));
+  await api('POST', '/api/groups', { groups: GROUPS }).catch(e => toast(e.message, 'err'));
   saveLS(); renderAll();
   toast(`Group "${name}" deleted`, 'inf');
 }
@@ -897,10 +1243,15 @@ function openEdit(p) {
 
   const gc = document.getElementById('e-grps');
   gc.innerHTML = GROUPS.length
-    ? GROUPS.map(g => `
-        <label class="chk-label" style="margin-bottom:3px">
-          <input type="checkbox" value="${esc(g)}"${(m.groups||[]).includes(g)?' checked':''}> ${esc(g)}
-        </label>`).join('')
+    ? GROUPS.map(g => {
+        const dotStyle = g.color ? `background:${g.color}` : '';
+        return `
+          <label class="chk-label" style="margin-bottom:3px">
+            <input type="checkbox" value="${esc(g.name)}"${(m.groups||[]).includes(g.name)?' checked':''}>
+            <span class="grp-color-dot" style="${dotStyle}"></span>
+            ${esc(g.name)}
+          </label>`;
+      }).join('')
     : '<span style="color:var(--muted);font-size:12px">No groups yet — create them in the sidebar.</span>';
 
   document.getElementById('edit-ov').classList.add('open');
@@ -1004,6 +1355,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.getElementById('edit-ov').classList.remove('open');
     document.getElementById('set-ov').classList.remove('open');
+    document.getElementById('grp-ov').classList.remove('open');
     editPath = null;
   }
   if ((e.key === '/' || (e.ctrlKey && e.key === 'f')) && !e.target.matches('input,textarea,select')) {
@@ -1025,7 +1377,10 @@ async function maybeMigrate(serverData) {
   if (!old.dirs?.length && !old.groups?.length && !Object.keys(old.meta || {}).length) return;
 
   if (old.dirs?.length)   { DIRS   = old.dirs;   await api('POST', '/api/dirs',   {dirs:   DIRS}); }
-  if (old.groups?.length) { GROUPS = old.groups; await api('POST', '/api/groups', {groups: GROUPS}); }
+  if (old.groups?.length) {
+    GROUPS = old.groups.map(g => typeof g === 'string' ? {name: g, color: ''} : g);
+    await api('POST', '/api/groups', {groups: GROUPS});
+  }
   for (const [p, m] of Object.entries(old.meta || {})) {
     META[p] = m;
     await api('POST', '/api/meta', {path: p, ...m});

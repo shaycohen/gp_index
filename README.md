@@ -1,5 +1,7 @@
 # Guitar Pro Index
 
+[![GitHub](https://img.shields.io/badge/GitHub-shaycohen%2Fgp__index-orange?logo=github)](https://github.com/shaycohen/gp_index)
+
 A local web app that indexes your Guitar Pro files, reads artist / title / tuning directly from file metadata, and lets you search, filter, sort, and open them — backed by SQLite.
 
 ![Guitar Pro Index screenshot](screenshot.png)
@@ -65,4 +67,9 @@ Click **⚙ Settings**, add a folder, then **Save & Scan**.
 
 - **`gpi.db`** — SQLite database; all user data lives here (back it up to preserve metadata)
 - **localStorage** — caches the last scan result and UI state (filters, sort); auto-migrates to the server DB on first run if you used an older version of the app
-# gp_index
+
+---
+
+## Credits
+
+Built by [Shay Cohen](https://github.com/shaycohen) · [github.com/shaycohen/gp_index](https://github.com/shaycohen/gp_index)

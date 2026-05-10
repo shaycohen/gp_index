@@ -37,19 +37,25 @@ db.exec(`
     sort_order INTEGER NOT NULL DEFAULT 0
   );
 `);
+try { db.exec(`ALTER TABLE grps ADD COLUMN color TEXT NOT NULL DEFAULT ''`); } catch(_) {}
 
 function dbGetDirs() {
   return db.prepare('SELECT path FROM dirs ORDER BY sort_order').all().map(r => r.path);
 }
 function dbGetGroups() {
-  return db.prepare('SELECT name FROM grps ORDER BY sort_order').all().map(r => r.name);
+  return db.prepare('SELECT name, color FROM grps ORDER BY sort_order').all()
+    .map(r => ({ name: r.name, color: r.color || '' }));
 }
 function dbGetMeta() {
   const out = {};
   for (const r of db.prepare('SELECT * FROM meta').all()) {
-    r.groups   = JSON.parse(r.groups || '[]');
-    r.favorite = !!r.favorite;
-    out[r.path] = r;
+    const entry = { favorite: !!r.favorite, groups: JSON.parse(r.groups || '[]'), notes: r.notes || '' };
+    if (r.artist      !== null) entry.artist      = r.artist;
+    if (r.song        !== null) entry.song        = r.song;
+    if (r.tuning      !== null) entry.tuning      = r.tuning;
+    if (r.strings     !== null) entry.strings     = r.strings;
+    if (r.last_opened !== null) entry.last_opened = r.last_opened;
+    out[r.path] = entry;
   }
   return out;
 }
@@ -61,11 +67,15 @@ const dbSetDirs = db.transaction(dirs => {
   dirs.forEach((p, i) => _setDirsStmt.run(p, i));
 });
 
-const _setGrpStmt = db.prepare('INSERT OR IGNORE INTO grps (name, sort_order) VALUES (?, ?)');
+const _setGrpStmt = db.prepare('INSERT OR IGNORE INTO grps (name, color, sort_order) VALUES (?, ?, ?)');
 const _clearGrps  = db.prepare('DELETE FROM grps');
 const dbSetGroups = db.transaction(groups => {
   _clearGrps.run();
-  groups.forEach((g, i) => _setGrpStmt.run(g, i));
+  groups.forEach((g, i) => {
+    const name  = typeof g === 'string' ? g : g.name;
+    const color = typeof g === 'string' ? '' : (g.color || '');
+    _setGrpStmt.run(name, color, i);
+  });
 });
 
 function dbUpsertMeta(filePath, updates) {
