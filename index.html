@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guitar Pro Index</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:        #0d1117;
+  --surface:   #161b22;
+  --surface2:  #21262d;
+  --hover:     #1c2128;
+  --border:    #30363d;
+  --border2:   #21262d;
+  --accent:    #f0883e;
+  --accent-h:  #ff9f57;
+  --accent-d:  rgba(240,136,62,.14);
+  --text:      #c9d1d9;
+  --muted:     #8b949e;
+  --bright:    #f0f6fc;
+  --star:      #e3b341;
+  --ok:        #3fb950;
+  --err:       #f85149;
+  --info:      #58a6ff;
+  --r:         6px;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* ── Header ─────────────────────────────────── */
+.hdr{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:10px 18px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-shrink:0;
+  z-index:20;
+}
+.hdr-logo{font-size:17px;font-weight:700;color:var(--accent);letter-spacing:-.3px}
+.hdr-stats{color:var(--muted);font-size:12px}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+/* ── Buttons ─────────────────────────────────── */
+.btn{
+  padding:5px 13px;
+  border-radius:var(--r);
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+  cursor:pointer;
+  font-size:13px;
+  font-family:inherit;
+  transition:background .15s,border-color .15s;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.btn:hover{background:var(--hover);border-color:var(--muted)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.btn-primary:hover{background:var(--accent-h);border-color:var(--accent-h)}
+.btn-sm{font-size:12px;padding:3px 9px}
+
+/* ── Layout ─────────────────────────────────── */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* ── Sidebar ─────────────────────────────────── */
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  padding:14px 12px;
+  display:flex;flex-direction:column;gap:18px;
+}
+.sb-title{
+  font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted);margin-bottom:6px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sb-title button{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:16px;line-height:1;padding:0 2px;
+}
+.sb-title button:hover{color:var(--accent)}
+
+.input{
+  width:100%;padding:6px 9px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r);color:var(--text);font-size:13px;
+  font-family:inherit;transition:border-color .15s;
+}
+.input:focus{outline:none;border-color:var(--accent)}
+.input::placeholder{color:var(--muted)}
+select.input{
+  cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238b949e' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;
+}
+.chk-label{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--text)}
+.chk-label input{accent-color:var(--accent);width:14px;height:14px}
+
+.filter-grp{display:flex;flex-direction:column;gap:5px}
+
+.grp-list{display:flex;flex-direction:column;gap:1px}
+.grp-item{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 7px;border-radius:var(--r);
+  cursor:pointer;color:var(--muted);font-size:13px;
+  transition:background .12s,color .12s;
+}
+.grp-item:hover,.grp-item.on{background:var(--hover);color:var(--text)}
+.grp-item.on{color:var(--accent)}
+.grp-count{margin-left:auto;font-size:11px;color:var(--muted)}
+.grp-del{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:15px;line-height:1;padding:0 1px;opacity:0;transition:opacity .12s;
+}
+.grp-item:hover .grp-del{opacity:1}
+.grp-del:hover{color:var(--err)}
+
+/* ── Main ─────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{
+  padding:8px 14px;display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  background:var(--surface);
+}
+.res-count{font-size:12px;color:var(--muted)}
+
+/* ── Table ─────────────────────────────────── */
+.tbl-wrap{flex:1;overflow-y:auto}
+table{width:100%;border-collapse:collapse}
+thead{position:sticky;top:0;z-index:10;background:var(--surface)}
+th{
+  padding:9px 11px;text-align:left;font-size:11px;font-weight:600;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.4px;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;user-select:none;
+}
+th.sortable{cursor:pointer}
+th.sortable:hover{color:var(--text)}
+th.sorted{color:var(--accent)}
+.sort-ic{display:inline-block;margin-left:3px;opacity:.4;font-size:10px}
+th.sorted .sort-ic{opacity:1}
+
+td{
+  padding:8px 11px;border-bottom:1px solid var(--border2);
+  color:var(--text);vertical-align:middle;
+}
+tr:hover td{background:var(--hover)}
+
+.c-fav   {width:38px;text-align:center}
+.c-str   {width:70px;text-align:center}
+.c-fmt   {width:65px;text-align:center}
+.c-act   {width:90px}
+.c-lo    {width:110px}
+
+/* star */
+.star-btn{
+  background:none;border:none;cursor:pointer;
+  font-size:15px;line-height:1;padding:2px 4px;
+  color:var(--border);transition:color .12s,transform .12s;
+}
+.star-btn:hover{color:var(--star);transform:scale(1.25)}
+.star-btn.on{color:var(--star)}
+
+/* badges */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:2px 7px;border-radius:10px;font-size:11px;
+  font-weight:500;white-space:nowrap;
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+}
+.badge-t{background:var(--accent-d);border-color:var(--accent);color:var(--accent)}
+.badge-s{background:#1c2952;border-color:#3d5a99;color:#79a8ff}
+
+.fmt{
+  font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px;
+  text-transform:uppercase;letter-spacing:.4px;
+}
+.fmt-gp5{background:#1a3a1a;color:#4caf50}
+.fmt-gp7{background:#1a2a3a;color:#2196f3}
+.fmt-gpx{background:#2a1a3a;color:#9c27b0}
+.fmt-gp6{background:#2a1a3a;color:#9c27b0}
+.fmt-gp4{background:#3a2a1a;color:#ff9800}
+.fmt-gp3{background:#3a1a1a;color:#f44336}
+.fmt-gp {background:#2a2a2a;color:#9e9e9e}
+
+/* row actions */
+.row-acts{display:flex;gap:3px;opacity:0;transition:opacity .12s}
+tr:hover .row-acts{opacity:1}
+.act-btn{
+  padding:2px 7px;border-radius:4px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);cursor:pointer;
+  font-size:11px;font-family:inherit;transition:background .12s,color .12s;
+}
+.act-btn:hover{background:var(--hover);color:var(--text);border-color:var(--muted)}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.chip{
+  padding:1px 6px;border-radius:10px;font-size:10px;
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+}
+
+/* path cell */
+.path-txt{
+  font-family:'SFMono-Regular',monospace;font-size:11px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;
+  display:block;
+}
+
+/* highlight */
+mark.hl{background:rgba(240,136,62,.32);border-radius:2px;color:inherit}
+
+/* open cursor on clickable cells */
+.c-open{cursor:pointer}
+.c-open:hover .song-name{color:var(--accent-h)}
+
+/* ── Empty state ─────────────────────────────── */
+.empty{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;padding:40px;text-align:center;
+}
+.empty-ic{font-size:56px;opacity:.25}
+.empty-h{font-size:17px;font-weight:600;color:var(--bright)}
+.empty-p{color:var(--muted);max-width:380px;font-size:13px}
+
+/* ── Modals ─────────────────────────────────── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.72);z-index:100;
+  align-items:center;justify-content:center;
+}
+.overlay.open{display:flex}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:22px;width:500px;max-width:92vw;
+  box-shadow:0 12px 32px rgba(0,0,0,.5);
+}
+.modal-h{font-size:15px;font-weight:600;color:var(--bright);margin-bottom:16px}
+.modal-sub{font-size:11px;font-family:'SFMono-Regular',monospace;color:var(--muted);
+  margin-bottom:16px;word-break:break-all;border:1px solid var(--border2);
+  border-radius:4px;padding:5px 8px;background:var(--bg)}
+.form-grp{margin-bottom:12px}
+.form-lbl{
+  display:block;font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:4px;
+}
+textarea.input{resize:vertical;min-height:56px}
+.modal-foot{
+  display:flex;justify-content:flex-end;gap:7px;
+  margin-top:18px;padding-top:14px;border-top:1px solid var(--border);
+}
+
+/* ── Settings ─────────────────────────────────── */
+.dir-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.dir-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r);padding:7px 9px;
+}
+.dir-path{flex:1;font-family:'SFMono-Regular',monospace;font-size:12px;color:var(--info);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dir-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 2px;transition:color .12s}
+.dir-del:hover{color:var(--err)}
+.add-row{display:flex;gap:7px}
+
+/* ── Tags input ─────────────────────────────── */
+.grp-checks{display:flex;flex-direction:column;gap:4px}
+
+/* ── Spinner ─────────────────────────────────── */
+.spinner{
+  width:13px;height:13px;border:2px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-row{display:none;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.spin-row.vis{display:flex}
+
+/* ── Toasts ─────────────────────────────────── */
+#toasts{position:fixed;bottom:18px;right:18px;z-index:200;display:flex;flex-direction:column;gap:7px}
+.toast{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:9px 14px;font-size:13px;
+  box-shadow:0 6px 20px rgba(0,0,0,.4);
+  animation:tin .18s ease;max-width:320px;
+}
+.toast.ok {border-left:3px solid var(--ok)}
+.toast.err{border-left:3px solid var(--err)}
+.toast.inf{border-left:3px solid var(--info)}
+@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+
+/* ── Scrollbar ─────────────────────────────── */
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ══ Header ═══════════════════════════════════════════════════════════════ -->
+<header class="hdr">
+  <span class="hdr-logo">🎸 Guitar Pro Index</span>
+  <span id="hdr-stats" class="hdr-stats"></span>
+  <div class="hdr-right">
+    <div id="spin" class="spin-row"><div class="spinner"></div>Scanning…</div>
+    <button class="btn" onclick="doScan()">↻ Rescan</button>
+    <button class="btn" onclick="openSettings()">⚙ Settings</button>
+  </div>
+</header>
+
+<!-- ══ Body ══════════════════════════════════════════════════════════════════ -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div>
+      <div class="sb-title">Search</div>
+      <input type="text" id="q" class="input" placeholder="Artist, song, file…" oninput="onFilter()">
+    </div>
+
+    <div>
+      <div class="sb-title">Filters</div>
+      <div class="filter-grp">
+        <select id="f-tuning" class="input" onchange="onFilter()">
+          <option value="">All tunings</option>
+        </select>
+        <select id="f-str" class="input" onchange="onFilter()">
+          <option value="">All strings</option>
+          <option value="6">6-string</option>
+          <option value="7">7-string</option>
+          <option value="8">8-string</option>
+        </select>
+        <label class="chk-label">
+          <input type="checkbox" id="f-fav" onchange="onFilter()">
+          ⭐ Favorites only
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <div class="sb-title">
+        Groups
+        <button onclick="addGroup()" title="New group">＋</button>
+      </div>
+      <div id="grp-list" class="grp-list"></div>
+    </div>
+
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="toolbar">
+      <span id="res-count" class="res-count"></span>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm" onclick="clearFilters()">Clear filters</button>
+    </div>
+    <div class="tbl-wrap" id="tbl-wrap"></div>
+  </main>
+
+</div>
+
+<!-- ══ Edit modal ════════════════════════════════════════════════════════════ -->
+<div id="edit-ov" class="overlay" onclick="closeEdit(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-h">Edit Metadata</div>
+    <div id="edit-path" class="modal-sub"></div>
+    <div class="form-grp">
+      <label class="form-lbl">Artist</label>
+      <input type="text" id="e-artist" class="input" placeholder="Artist name">
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Song Name</label>
+      <input type="text" id="e-song" class="input" placeholder="Song name">
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Tuning</label>
+      <select id="e-tuning" class="input"></select>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Number of Strings</label>
+      <select id="e-str" class="input">
+        <option value="0">Unknown</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Groups</label>
+      <div id="e-grps" class="grp-checks"></div>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Notes</label>
+      <textarea id="e-notes" class="input" placeholder="Optional notes…"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Settings modal ════════════════════════════════════════════════════════ -->
+<div id="set-ov" class="overlay" onclick="closeSettings(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-h">⚙ Settings — Scan Directories</div>
+    <div id="dir-list" class="dir-list"></div>
+    <div class="add-row">
+      <input type="text" id="new-dir" class="input" placeholder="~/Music/GuitarPro" style="flex:1"
+             onkeydown="if(event.key==='Enter')addDir()">
+      <button class="btn" onclick="addDir()">Add</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeSettings()">Close</button>
+      <button class="btn btn-primary" onclick="scanAndClose()">Save &amp; Scan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Toasts ════════════════════════════════════════════════════════════════ -->
+<div id="toasts"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────────────────────────────
+
+const TUNINGS = [
+  {id:'standard_e',    label:'Standard E',                strings:6},
+  {id:'eb_standard',   label:'Eb Standard (half step ↓)', strings:6},
+  {id:'drop_d',        label:'Drop D',                    strings:6},
+  {id:'d_standard',    label:'D Standard',                strings:6},
+  {id:'drop_c',        label:'Drop C',                    strings:6},
+  {id:'cs_standard',   label:'C# Standard',               strings:6},
+  {id:'drop_b',        label:'Drop B',                    strings:6},
+  {id:'c_standard',    label:'C Standard',                strings:6},
+  {id:'drop_bb',       label:'Drop A#/Bb',                strings:6},
+  {id:'b_standard',    label:'B Standard',                strings:6},
+  {id:'drop_a_6',      label:'Drop A (6-string)',          strings:6},
+  {id:'open_g',        label:'Open G',                    strings:6},
+  {id:'open_d',        label:'Open D',                    strings:6},
+  {id:'open_e',        label:'Open E',                    strings:6},
+  {id:'open_a',        label:'Open A',                    strings:6},
+  {id:'dadgad',        label:'DADGAD',                    strings:6},
+  {id:'7_standard',    label:'7-String Standard (BEADGBe)',strings:7},
+  {id:'7_drop_a',      label:'7-String Drop A',           strings:7},
+  {id:'7_a_standard',  label:'7-String A Standard',       strings:7},
+  {id:'7_drop_gs',     label:'7-String Drop G#',          strings:7},
+  {id:'8_standard',    label:'8-String Standard (F#BEADGBe)',strings:8},
+  {id:'8_drop_e',      label:'8-String Drop E',           strings:8},
+  {id:'8_e_standard',  label:'8-String E Standard',       strings:8},
+  {id:'custom',        label:'Custom / Other',             strings:0},
+];
+
+const SERVER = 'http://localhost:3847';
+const LS_KEY = 'gpi_v1';
+
+// ─────────────────────────────────────────────────────────────────
+//  STATE  (files/filters/sort stay in localStorage; meta/dirs/groups live on server)
+// ─────────────────────────────────────────────────────────────────
+
+let S      = {};   // { files, filters, sort }
+let META   = {};   // path → row from server DB
+let DIRS   = [];
+let GROUPS = [];
+
+let editPath = null;
+let curFiles = [];
+
+function defaultState() {
+  return {
+    files:   [],
+    filters: {q:'', tuning:'', str:'', group:'', fav:false},
+    sort:    {by:'artist', asc:true}
+  };
+}
+
+function loadLS() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    S = {...defaultState(), ...raw};
+    if (!Array.isArray(S.files)) S.files = [];
+  } catch { S = defaultState(); }
+}
+
+function saveLS() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({files:S.files, filters:S.filters, sort:S.sort})); }
+  catch(e) { console.warn(e); }
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  METADATA HELPERS
+// ─────────────────────────────────────────────────────────────────
+
+function getMeta(p) { return META[p] || {}; }
+
+async function setMeta(p, upd) {
+  META[p] = {...getMeta(p), ...upd};
+  api('POST', '/api/meta', {path: p, ...upd}).catch(e => toast(e.message, 'err'));
+}
+
+function parseName(name, dir) {
+  const base = name.replace(/\.[^.]+$/, '');
+  const m = base.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+  if (m) return {artist: m[1].trim(), song: m[2].trim()};
+  const dname = dir ? dir.split('/').filter(Boolean).pop() : '';
+  return {artist: dname || '', song: base};
+}
+
+function effective(f) {
+  const m  = getMeta(f.path);
+  const fm = f.fileMeta || {};
+  const p  = parseName(f.name, f.dir);
+  return {
+    artist:      m.artist   !== undefined ? m.artist   : (fm.artist  || p.artist),
+    song:        m.song     !== undefined ? m.song     : (fm.title   || p.song),
+    tuning:      m.tuning   !== undefined ? m.tuning   : (fm.tuning  || ''),
+    strings:     m.strings  !== undefined ? m.strings  : (fm.strings || 0),
+    favorite:    m.favorite || false,
+    groups:      m.groups   || [],
+    notes:       m.notes    || '',
+    last_opened: m.last_opened || null
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  API
+// ─────────────────────────────────────────────────────────────────
+
+async function api(method, path, data) {
+  const opts = {method, headers:{'Content-Type':'application/json'}};
+  if (data) opts.body = JSON.stringify(data);
+  let r;
+  try { r = await fetch(SERVER + path, opts); }
+  catch { throw new Error('Cannot connect to server. Is server.js running?'); }
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || r.statusText);
+  return body;
+}
+
+async function doScan() {
+  if (!DIRS.length) { openSettings(); toast('Add scan directories first', 'inf'); return; }
+  document.getElementById('spin').classList.add('vis');
+  try {
+    const files = await api('POST', '/api/scan', {dirs: DIRS});
+    S.files = files;
+    saveLS();
+    toast(`Found ${files.length} Guitar Pro file${files.length===1?'':'s'}`, 'ok');
+    renderAll();
+  } catch(e) {
+    toast(e.message, 'err');
+  } finally {
+    document.getElementById('spin').classList.remove('vis');
+  }
+}
+
+async function openFile(filePath) {
+  try {
+    const result = await api('POST', '/api/open', {file: filePath});
+    if (result.last_opened) {
+      META[filePath] = {...getMeta(filePath), last_opened: result.last_opened};
+      renderTable();
+    }
+  } catch(e) {
+    toast('Could not open file: ' + e.message, 'err');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  FILTERING & SORTING
+// ─────────────────────────────────────────────────────────────────
+
+function getVisible() {
+  const {q, tuning, str, group, fav} = S.filters;
+  const ql = q.toLowerCase();
+
+  let files = S.files.filter(f => {
+    const m = effective(f);
+    if (fav    && !m.favorite) return false;
+    if (group  && !m.groups.includes(group)) return false;
+    if (tuning && m.tuning !== tuning) return false;
+    if (str    && m.strings !== parseInt(str)) return false;
+    if (ql) {
+      const hay = (m.artist + ' ' + m.song + ' ' + f.name).toLowerCase();
+      if (!hay.includes(ql)) return false;
+    }
+    return true;
+  });
+
+  const {by, asc} = S.sort;
+  files.sort((a, b) => {
+    const ma = effective(a), mb = effective(b);
+    let va, vb;
+    if      (by === 'artist')      { va = ma.artist.toLowerCase();  vb = mb.artist.toLowerCase(); }
+    else if (by === 'song')        { va = ma.song.toLowerCase();    vb = mb.song.toLowerCase(); }
+    else if (by === 'tuning')      { va = ma.tuning;               vb = mb.tuning; }
+    else if (by === 'strings')     { va = ma.strings;              vb = mb.strings; }
+    else if (by === 'ext')         { va = a.ext;                   vb = b.ext; }
+    else if (by === 'last_opened') {
+      if (!ma.last_opened && !mb.last_opened) return 0;
+      if (!ma.last_opened) return 1;   // never-opened always at the bottom
+      if (!mb.last_opened) return -1;
+      va = ma.last_opened; vb = mb.last_opened;
+    }
+    else { va = ma.artist.toLowerCase(); vb = mb.artist.toLowerCase(); }
+    if (va < vb) return asc ? -1 : 1;
+    if (va > vb) return asc ?  1 : -1;
+    return 0;
+  });
+
+  return files;
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────────────────────
+
+function renderAll() { renderStats(); renderSidebar(); renderTable(); }
+
+function renderStats() {
+  const favs = S.files.filter(f => getMeta(f.path).favorite).length;
+  document.getElementById('hdr-stats').textContent =
+    S.files.length ? S.files.length + ' files' + (favs ? ' · ' + favs + ' ★' : '') : '';
+}
+
+function renderSidebar() {
+  const ts = document.getElementById('f-tuning');
+  if (ts.options.length <= 1) {
+    for (const t of TUNINGS) {
+      const o = document.createElement('option');
+      o.value = t.id; o.textContent = t.label;
+      ts.appendChild(o);
+    }
+  }
+  ts.value = S.filters.tuning;
+  document.getElementById('f-str').value    = S.filters.str;
+  document.getElementById('f-fav').checked  = S.filters.fav;
+  document.getElementById('q').value        = S.filters.q;
+
+  const gl = document.getElementById('grp-list');
+  gl.innerHTML = '';
+
+  function mkItem(label, active, clickFn, delFn, count) {
+    const d = document.createElement('div');
+    d.className = 'grp-item' + (active ? ' on' : '');
+    const cnt = count !== undefined ? `<span class="grp-count">${count}</span>` : '';
+    d.innerHTML = `<span>${label}</span>${cnt}`;
+    d.onclick = clickFn;
+    if (delFn) {
+      const b = document.createElement('button');
+      b.className = 'grp-del'; b.textContent = '×'; b.title = 'Delete group';
+      b.onclick = e => { e.stopPropagation(); delFn(); };
+      d.appendChild(b);
+    }
+    return d;
+  }
+
+  gl.appendChild(mkItem('📋 All files', !S.filters.group && !S.filters.fav,
+    () => { S.filters.group = ''; S.filters.fav = false; saveLS(); renderAll(); }));
+
+  gl.appendChild(mkItem('⭐ Favorites', S.filters.fav,
+    () => { S.filters.fav = !S.filters.fav; S.filters.group = ''; saveLS(); renderAll(); }));
+
+  for (const g of GROUPS) {
+    const cnt = S.files.filter(f => (getMeta(f.path).groups || []).includes(g)).length;
+    gl.appendChild(mkItem('📁 ' + g, S.filters.group === g,
+      () => { S.filters.group = g; S.filters.fav = false; saveLS(); renderAll(); },
+      () => deleteGroup(g),
+      cnt));
+  }
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '—';
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const min  = Math.floor(diff / 60000);
+  const hr   = Math.floor(diff / 3600000);
+  const day  = Math.floor(diff / 86400000);
+  if (min < 1)  return 'Just now';
+  if (min < 60) return `${min}m ago`;
+  if (hr  < 24) return `${hr}h ago`;
+  if (day < 7)  return `${day}d ago`;
+  return new Date(isoStr).toLocaleDateString();
+}
+
+function renderTable() {
+  const wrap = document.getElementById('tbl-wrap');
+  const vis  = getVisible();
+  curFiles   = vis;
+
+  if (!S.files.length) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="empty-ic">🎸</div>
+        <div class="empty-h">No Guitar Pro files yet</div>
+        <div class="empty-p">Add your Guitar Pro folder in Settings and click Rescan.</div>
+        <button class="btn btn-primary" onclick="openSettings()">⚙ Open Settings</button>
+      </div>`;
+    document.getElementById('res-count').textContent = '';
+    return;
+  }
+
+  document.getElementById('res-count').textContent =
+    `Showing ${vis.length} of ${S.files.length} files`;
+
+  if (!vis.length) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="empty-ic">🔍</div>
+        <div class="empty-h">No results</div>
+        <div class="empty-p">Try adjusting your search or filters.</div>
+        <button class="btn" onclick="clearFilters()">Clear filters</button>
+      </div>`;
+    return;
+  }
+
+  const {by, asc} = S.sort;
+  const si = col => `<span class="sort-ic">${col !== by ? '⇅' : asc ? '↑' : '↓'}</span>`;
+  const sh = col => col === by ? ' sorted' : '';
+  const ql = S.filters.q.toLowerCase();
+
+  function hl(txt) {
+    if (!txt) return '—';
+    if (!ql)  return esc(txt);
+    const i = txt.toLowerCase().indexOf(ql);
+    if (i < 0) return esc(txt);
+    return esc(txt.slice(0,i)) +
+           `<mark class="hl">${esc(txt.slice(i, i+ql.length))}</mark>` +
+           esc(txt.slice(i+ql.length));
+  }
+
+  const thead = `<thead><tr>
+    <th class="c-fav" title="Favorite">⭐</th>
+    <th class="sortable${sh('artist')}"      onclick="setSort('artist')">Artist ${si('artist')}</th>
+    <th class="sortable${sh('song')}"        onclick="setSort('song')">Song ${si('song')}</th>
+    <th class="sortable${sh('tuning')}"      onclick="setSort('tuning')">Tuning ${si('tuning')}</th>
+    <th class="c-str sortable${sh('strings')}" onclick="setSort('strings')"># ${si('strings')}</th>
+    <th class="c-fmt sortable${sh('ext')}"   onclick="setSort('ext')">Format ${si('ext')}</th>
+    <th>Path</th>
+    <th class="c-lo sortable${sh('last_opened')}" onclick="setSort('last_opened')">Last Opened ${si('last_opened')}</th>
+    <th class="c-act"></th>
+  </tr></thead>`;
+
+  const rows = vis.map((f, i) => {
+    const m      = effective(f);
+    const tLabel = TUNINGS.find(t => t.id === m.tuning)?.label || m.tuning || '—';
+    const chips  = (m.groups||[]).slice(0,3).map(g => `<span class="chip">${esc(g)}</span>`).join('');
+
+    return `<tr data-i="${i}">
+      <td class="c-fav">
+        <button class="star-btn${m.favorite?' on':''}" data-action="fav" title="Toggle favorite">
+          ${m.favorite ? '★' : '☆'}
+        </button>
+      </td>
+      <td class="c-open">${hl(m.artist)}</td>
+      <td class="c-open">
+        <span class="song-name">${hl(m.song)}</span>
+        ${chips ? `<div class="chips">${chips}</div>` : ''}
+      </td>
+      <td><span class="badge${m.tuning?' badge-t':''}">${esc(tLabel)}</span></td>
+      <td class="c-str"><span class="badge badge-s">${m.strings || '—'}</span></td>
+      <td class="c-fmt"><span class="fmt fmt-${esc(f.ext)}">.${esc(f.ext)}</span></td>
+      <td title="${esc(f.path)}"><span class="path-txt">${esc(f.dir)}</span></td>
+      <td class="c-lo" style="color:var(--muted);font-size:12px">${timeAgo(m.last_opened)}</td>
+      <td>
+        <div class="row-acts">
+          <button class="act-btn" data-action="open" title="Open in Guitar Pro">▶ Open</button>
+          <button class="act-btn" data-action="edit" title="Edit metadata">✎ Edit</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table>${thead}<tbody id="tbody">${rows}</tbody></table>`;
+
+  document.getElementById('tbody').addEventListener('click', e => {
+    const row = e.target.closest('tr[data-i]');
+    if (!row) return;
+    const f   = curFiles[parseInt(row.dataset.i)];
+    if (!f) return;
+    const act = e.target.closest('[data-action]')?.dataset.action;
+    if (act === 'fav')  { toggleFav(f.path); return; }
+    if (act === 'edit') { openEdit(f.path);  return; }
+    if (e.target.tagName === 'TD' || e.target.closest('td:not(:last-child)')) openFile(f.path);
+    if (act === 'open') openFile(f.path);
+  });
+}
+
+function renderDirs() {
+  const el = document.getElementById('dir-list');
+  if (!el) return;
+  if (!DIRS.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px 0">No directories added yet.</div>';
+    return;
+  }
+  el.innerHTML = DIRS.map((d,i) => `
+    <div class="dir-item">
+      <span class="dir-path">${esc(d)}</span>
+      <button class="dir-del" onclick="removeDir(${i})" title="Remove">×</button>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  INTERACTIONS
+// ─────────────────────────────────────────────────────────────────
+
+function onFilter() {
+  S.filters.q      = document.getElementById('q').value;
+  S.filters.tuning = document.getElementById('f-tuning').value;
+  S.filters.str    = document.getElementById('f-str').value;
+  S.filters.fav    = document.getElementById('f-fav').checked;
+  saveLS(); renderStats(); renderSidebar(); renderTable();
+}
+
+function clearFilters() {
+  S.filters = {q:'', tuning:'', str:'', group:'', fav:false};
+  saveLS(); renderAll();
+}
+
+function setSort(col) {
+  if (S.sort.by === col) S.sort.asc = !S.sort.asc;
+  else { S.sort.by = col; S.sort.asc = col !== 'last_opened'; }
+  saveLS(); renderTable();
+}
+
+function toggleFav(p) {
+  const newFav = !getMeta(p).favorite;
+  META[p] = {...getMeta(p), favorite: newFav};
+  renderStats(); renderSidebar(); renderTable();
+  api('POST', '/api/meta', {path: p, favorite: newFav}).catch(e => toast(e.message, 'err'));
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  GROUPS
+// ─────────────────────────────────────────────────────────────────
+
+async function addGroup() {
+  const name = prompt('Group name:');
+  if (!name?.trim()) return;
+  const g = name.trim();
+  if (!GROUPS.includes(g)) {
+    GROUPS.push(g);
+    await api('POST', '/api/groups', {groups: GROUPS}).catch(e => toast(e.message, 'err'));
+  }
+  renderSidebar();
+  toast(`Group "${g}" created`, 'ok');
+}
+
+async function deleteGroup(name) {
+  if (!confirm(`Delete group "${name}"?`)) return;
+  GROUPS = GROUPS.filter(g => g !== name);
+  for (const p in META) {
+    if (META[p].groups) META[p].groups = META[p].groups.filter(g => g !== name);
+  }
+  if (S.filters.group === name) S.filters.group = '';
+  await api('POST', '/api/groups', {groups: GROUPS}).catch(e => toast(e.message, 'err'));
+  saveLS(); renderAll();
+  toast(`Group "${name}" deleted`, 'inf');
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  EDIT MODAL
+// ─────────────────────────────────────────────────────────────────
+
+function openEdit(p) {
+  editPath = p;
+  const f = S.files.find(f => f.path === p);
+  if (!f) return;
+  const m = effective(f);
+
+  document.getElementById('edit-path').textContent = p;
+  document.getElementById('e-artist').value = m.artist;
+  document.getElementById('e-song').value   = m.song;
+  document.getElementById('e-notes').value  = m.notes;
+  document.getElementById('e-str').value    = String(m.strings || 0);
+
+  const ts = document.getElementById('e-tuning');
+  ts.innerHTML = '<option value="">Unknown</option>' +
+    TUNINGS.map(t => `<option value="${esc(t.id)}"${t.id===m.tuning?' selected':''}>${esc(t.label)}</option>`).join('');
+
+  const gc = document.getElementById('e-grps');
+  gc.innerHTML = GROUPS.length
+    ? GROUPS.map(g => `
+        <label class="chk-label" style="margin-bottom:3px">
+          <input type="checkbox" value="${esc(g)}"${(m.groups||[]).includes(g)?' checked':''}> ${esc(g)}
+        </label>`).join('')
+    : '<span style="color:var(--muted);font-size:12px">No groups yet — create them in the sidebar.</span>';
+
+  document.getElementById('edit-ov').classList.add('open');
+  document.getElementById('e-artist').focus();
+}
+
+function closeEdit(e) {
+  if (e && e.target !== document.getElementById('edit-ov')) return;
+  document.getElementById('edit-ov').classList.remove('open');
+  editPath = null;
+}
+
+async function saveEdit() {
+  if (!editPath) return;
+  const p      = editPath;
+  const groups = [...document.querySelectorAll('#e-grps input:checked')].map(el => el.value);
+  const updates = {
+    artist:  document.getElementById('e-artist').value.trim(),
+    song:    document.getElementById('e-song').value.trim(),
+    tuning:  document.getElementById('e-tuning').value,
+    strings: parseInt(document.getElementById('e-str').value) || 0,
+    groups,
+    notes:   document.getElementById('e-notes').value.trim()
+  };
+  META[p] = {...getMeta(p), ...updates};
+  document.getElementById('edit-ov').classList.remove('open');
+  editPath = null;
+  renderAll();
+  try {
+    await api('POST', '/api/meta', {path: p, ...updates});
+    toast('Saved', 'ok');
+  } catch(e) { toast('Save failed: ' + e.message, 'err'); }
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  SETTINGS
+// ─────────────────────────────────────────────────────────────────
+
+function openSettings() {
+  renderDirs();
+  document.getElementById('new-dir').value = '';
+  document.getElementById('set-ov').classList.add('open');
+}
+
+function closeSettings(e) {
+  if (e && e.target !== document.getElementById('set-ov')) return;
+  document.getElementById('set-ov').classList.remove('open');
+}
+
+async function addDir() {
+  const v = document.getElementById('new-dir').value.trim();
+  if (!v || DIRS.includes(v)) return;
+  DIRS.push(v);
+  document.getElementById('new-dir').value = '';
+  renderDirs();
+  await api('POST', '/api/dirs', {dirs: DIRS}).catch(e => toast(e.message, 'err'));
+}
+
+async function removeDir(i) {
+  DIRS.splice(i, 1);
+  renderDirs();
+  await api('POST', '/api/dirs', {dirs: DIRS}).catch(e => toast(e.message, 'err'));
+}
+
+async function scanAndClose() {
+  const v = document.getElementById('new-dir').value.trim();
+  if (v && !DIRS.includes(v)) {
+    DIRS.push(v);
+    document.getElementById('new-dir').value = '';
+    await api('POST', '/api/dirs', {dirs: DIRS}).catch(e => toast(e.message, 'err'));
+  }
+  document.getElementById('set-ov').classList.remove('open');
+  await doScan();
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function toast(msg, type='inf', ms=3200) {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), ms);
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('edit-ov').classList.remove('open');
+    document.getElementById('set-ov').classList.remove('open');
+    editPath = null;
+  }
+  if ((e.key === '/' || (e.ctrlKey && e.key === 'f')) && !e.target.matches('input,textarea,select')) {
+    e.preventDefault();
+    document.getElementById('q').focus();
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────────────
+
+async function maybeMigrate(serverData) {
+  const hasData = serverData.dirs.length || serverData.groups.length ||
+                  Object.keys(serverData.meta).length;
+  if (hasData) return;
+  let old;
+  try { old = JSON.parse(localStorage.getItem('gpi_v1') || '{}'); } catch { return; }
+  if (!old.dirs?.length && !old.groups?.length && !Object.keys(old.meta || {}).length) return;
+
+  if (old.dirs?.length)   { DIRS   = old.dirs;   await api('POST', '/api/dirs',   {dirs:   DIRS}); }
+  if (old.groups?.length) { GROUPS = old.groups; await api('POST', '/api/groups', {groups: GROUPS}); }
+  for (const [p, m] of Object.entries(old.meta || {})) {
+    META[p] = m;
+    await api('POST', '/api/meta', {path: p, ...m});
+  }
+  toast('Migrated data from local storage to server DB', 'inf');
+}
+
+async function init() {
+  loadLS();
+  renderAll();
+  try {
+    const data = await api('GET', '/api/data');
+    await maybeMigrate(data);
+    META   = data.meta   || {};
+    DIRS   = data.dirs   || [];
+    GROUPS = data.groups || [];
+    renderAll();
+    if (DIRS.length && !S.files.length) doScan();
+  } catch(e) {
+    toast('Server not reachable — run: node server.js', 'err', 0);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

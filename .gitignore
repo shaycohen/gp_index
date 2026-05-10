@@ -1,0 +1,6 @@
+node_modules/
+gpi.db
+gpi.db-shm
+gpi.db-wal
+score.gpif
+.claude
