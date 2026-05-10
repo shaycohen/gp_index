@@ -2,6 +2,8 @@
 
 A local web app that indexes your Guitar Pro files, reads artist / title / tuning directly from file metadata, and lets you search, filter, sort, and open them — backed by SQLite.
 
+![Guitar Pro Index screenshot](screenshot.png)
+
 ---
 
 ## Quick Start
