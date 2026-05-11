@@ -328,8 +328,27 @@ tr:hover .row-acts{opacity:1}
 /* highlight */
 mark.hl{background:rgba(240,136,62,.32);border-radius:2px;color:inherit}
 
-/* .c-open kept for layout but no longer triggers open-on-click */
-.c-open{}
+/* artist cell — clickable to filter */
+td[data-action=artist]{cursor:pointer}
+td[data-action=artist]:hover{color:var(--accent-h)}
+
+/* active artist filter chip in sidebar */
+.artist-filter-item{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 7px;border-radius:var(--r);
+  background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.25);
+  color:var(--info);font-size:13px;
+}
+.artist-filter-item .grp-del{opacity:1;color:rgba(88,166,255,.6)}
+.artist-filter-item .grp-del:hover{color:var(--err)}
+
+/* sidebar sticky footer */
+.sb-footer{
+  position:sticky;bottom:0;
+  background:var(--surface);
+  padding-top:8px;
+  margin-top:auto;
+}
 
 /* ── Empty state ─────────────────────────────── */
 .empty{
@@ -472,6 +491,8 @@ textarea.input{resize:vertical;min-height:56px}
       </div>
     </div>
 
+    <div id="active-filters" style="display:none"></div>
+
     <div>
       <div class="sb-title">
         Groups
@@ -480,14 +501,19 @@ textarea.input{resize:vertical;min-height:56px}
       <div id="grp-list" class="grp-list"></div>
     </div>
 
+    <div class="sb-footer">
+      <button class="btn btn-sm" onclick="clearFilters()"
+              style="width:100%;justify-content:center;font-size:12px;color:var(--muted)">
+        × Remove all filters
+      </button>
+    </div>
+
   </aside>
 
   <!-- Main -->
   <main class="main">
     <div class="toolbar">
       <span id="res-count" class="res-count"></span>
-      <div style="flex:1"></div>
-      <button class="btn btn-sm" onclick="clearFilters()">Clear filters</button>
     </div>
     <div id="sel-bar" class="sel-bar">
       <span id="sel-count" class="sel-count"></span>
@@ -581,6 +607,9 @@ textarea.input{resize:vertical;min-height:56px}
       </div>
     </div>
     <div class="modal-foot">
+      <button id="grp-del-btn" class="btn" style="color:var(--err);border-color:var(--err);display:none"
+              onclick="deleteGroupFromModal()">Delete group</button>
+      <div style="flex:1"></div>
       <button class="btn" onclick="closeGrpModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveGrpModal()">Save</button>
     </div>
@@ -726,7 +755,7 @@ let grpModalColor  = '';       // '' means no color
 function defaultState() {
   return {
     files:   [],
-    filters: {q:'', tuning:'', str:'', group:'', fav:false},
+    filters: {q:'', tuning:'', str:'', group:'', fav:false, artist:''},
     sort:    {by:'artist', asc:true}
   };
 }
@@ -827,7 +856,7 @@ async function openFile(filePath) {
 // ─────────────────────────────────────────────────────────────────
 
 function getVisible() {
-  const {q, tuning, str, group, fav} = S.filters;
+  const {q, tuning, str, group, fav, artist} = S.filters;
   const ql = q.toLowerCase();
 
   let files = S.files.filter(f => {
@@ -836,6 +865,7 @@ function getVisible() {
     if (group  && !m.groups.includes(group)) return false;
     if (tuning && m.tuning !== tuning) return false;
     if (str    && m.strings !== parseInt(str)) return false;
+    if (artist && m.artist !== artist) return false;
     if (ql) {
       const hay = (m.artist + ' ' + m.song + ' ' + f.name).toLowerCase();
       if (!hay.includes(ql)) return false;
@@ -911,11 +941,50 @@ function renderSidebar() {
     return d;
   }
 
-  gl.appendChild(mkItem('📋 All files', !S.filters.group && !S.filters.fav,
-    () => { S.filters.group = ''; S.filters.fav = false; saveLS(); renderAll(); }));
+  const noFilters = !S.filters.group && !S.filters.fav && !S.filters.artist
+    && !S.filters.q && !S.filters.tuning && !S.filters.str;
+  gl.appendChild(mkItem('📋 All files', noFilters, () => clearFilters()));
 
   gl.appendChild(mkItem('⭐ Favorites', S.filters.fav,
     () => { S.filters.fav = !S.filters.fav; S.filters.group = ''; saveLS(); renderAll(); }));
+
+  // artist filter indicator
+  const af = document.getElementById('active-filters');
+  if (S.filters.artist) {
+    af.style.display = '';
+    af.innerHTML = '';
+
+    const title = document.createElement('div');
+    title.className = 'sb-title';
+    title.textContent = 'Artist Filter';
+    af.appendChild(title);
+
+    const item = document.createElement('div');
+    item.className = 'artist-filter-item';
+    item.title = 'Click to clear artist filter';
+    item.onclick = () => { S.filters.artist = ''; saveLS(); renderAll(); };
+
+    const icon = document.createElement('span');
+    icon.textContent = '🎤';
+    item.appendChild(icon);
+
+    const lbl = document.createElement('span');
+    lbl.textContent = S.filters.artist;
+    lbl.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    item.appendChild(lbl);
+
+    const x = document.createElement('button');
+    x.className = 'grp-del';
+    x.textContent = '×';
+    x.title = 'Clear artist filter';
+    x.onclick = e => { e.stopPropagation(); S.filters.artist = ''; saveLS(); renderAll(); };
+    item.appendChild(x);
+
+    af.appendChild(item);
+  } else {
+    af.style.display = 'none';
+    af.innerHTML = '';
+  }
 
   for (const g of GROUPS) {
     const cnt = S.files.filter(f => (getMeta(f.path).groups || []).includes(g.name)).length;
@@ -943,13 +1012,6 @@ function renderSidebar() {
     renBtn.title = 'Rename / edit color';
     renBtn.onclick = e => { e.stopPropagation(); openGrpModal('rename', g.name); };
     d.appendChild(renBtn);
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'grp-del';
-    delBtn.textContent = '×';
-    delBtn.title = 'Delete group';
-    delBtn.onclick = e => { e.stopPropagation(); deleteGroup(g.name); };
-    d.appendChild(delBtn);
 
     gl.appendChild(d);
   }
@@ -1044,7 +1106,7 @@ function renderTable() {
           ${m.favorite ? '★' : '☆'}
         </button>
       </td>
-      <td class="c-open">${hl(m.artist)}</td>
+      <td data-action="artist" title="Filter by artist: ${esc(m.artist)}">${hl(m.artist)}</td>
       <td class="c-open">
         <span class="song-name">${hl(m.song)}</span>
         ${chips ? `<div class="chips">${chips}</div>` : ''}
@@ -1072,9 +1134,14 @@ function renderTable() {
     const f   = curFiles[parseInt(row.dataset.i)];
     if (!f) return;
     const act = e.target.closest('[data-action]')?.dataset.action;
-    if (act === 'fav')  { toggleFav(f.path); return; }
-    if (act === 'edit') { openEdit(f.path);  return; }
-    if (act === 'open') { openFile(f.path);  return; }
+    if (act === 'fav')    { toggleFav(f.path); return; }
+    if (act === 'edit')   { openEdit(f.path);  return; }
+    if (act === 'open')   { openFile(f.path);  return; }
+    if (act === 'artist') {
+      const a = effective(f).artist;
+      S.filters.artist = S.filters.artist === a ? '' : a;
+      saveLS(); renderAll(); return;
+    }
   });
 
   updateSelectionUI();
@@ -1108,7 +1175,7 @@ function onFilter() {
 }
 
 function clearFilters() {
-  S.filters = {q:'', tuning:'', str:'', group:'', fav:false};
+  S.filters = {q:'', tuning:'', str:'', group:'', fav:false, artist:''};
   saveLS(); renderAll();
 }
 
@@ -1246,9 +1313,10 @@ function openGrpModal(mode, targetName) {
   const existing = targetName ? GROUPS.find(g => g.name === targetName) : null;
   grpModalColor  = existing?.color || PRESET_COLORS[0];
 
-  document.getElementById('grp-modal-h').textContent = mode === 'rename' ? 'Rename Group' : 'New Group';
+  document.getElementById('grp-modal-h').textContent = mode === 'rename' ? 'Edit Group' : 'New Group';
   document.getElementById('grp-name-in').value = targetName || '';
   document.getElementById('grp-color-in').value = grpModalColor || PRESET_COLORS[0];
+  document.getElementById('grp-del-btn').style.display = mode === 'rename' ? '' : 'none';
 
   const sw = document.getElementById('grp-swatches');
   sw.innerHTML = '';
@@ -1326,6 +1394,13 @@ async function saveGrpModal() {
 
   closeGrpModal();
   renderAll();
+}
+
+async function deleteGroupFromModal() {
+  const name = grpModalTarget;
+  if (!name) return;
+  closeGrpModal();
+  await deleteGroup(name);
 }
 
 async function deleteGroup(name) {
